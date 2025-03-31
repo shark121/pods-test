@@ -1,21 +1,67 @@
 /**
  * @param {Array<{
- * RideID: string,
- * RideTime: string,
- * RideStatus: string,
- * Origin: { latitude: number, longitude: number },
- * Destination: { latitude: number, longitude: number },
- * RideCapacity: number,
- * Directions: number, // or float, but number is more common in JS
- * RideDistance: number
+ * rideId: string,
+ * rideTime: string,
+ * rideStatus: string,
+ * origin: { lat: number, long: number },
+ * destination: { lat: number, long: number },
+ * dideCapacity: number,
+ * directions: number, // or float, but number is more common in JS
+ * dideDistance: number
  * }>} rides - An array of ride objects.
  * @returns {void} - This function does not return a value.
  */
 
+function calculateBearing(origin, destination) {
+  const toRadians = (deg) => (deg * Math.PI) / 180;
+  const toDegrees = (rad) => (rad * 180) / Math.PI;
+
+  const lat1 = toRadians(origin.lat);
+  const lat2 = toRadians(destination.lat);
+  const deltaLong = toRadians(destination.long - origin.long);
+
+  const y = Math.sin(deltaLong) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLong);
+
+  let bearing = toDegrees(Math.atan2(y, x));
+  return (bearing + 360) % 360; // Normalize to 0-360
+}
+
+function calculateAngleBetweenRides(ride1, ride2) {
+  const bearing1 = calculateBearing(ride1.origin, ride1.destination);
+  const bearing2 = calculateBearing(ride2.origin, ride2.destination);
+
+  let angleDifference = Math.abs(bearing1 - bearing2);
+  return angleDifference > 180 ? 360 - angleDifference : angleDifference; // Normalize to 0-180
+}
+
+function rankRidesByProximityToPod(ridesArray, pod) {
+  function getMidpoint(ride) {
+      return {
+          x: (ride.origin.long + ride.destination.long) / 2,
+          y: (ride.origin.lat + ride.destination.lat) / 2
+      };
+  }
+
+  const podMidpoint = getMidpoint(pod);
+
+  console.log(podMidpoint)
+
+  return ridesArray
+      .map(ride => {
+          const rideMidpoint = getMidpoint(ride);
+          const distance = Math.sqrt(
+              (rideMidpoint.x - podMidpoint.x) ** 2 + (rideMidpoint.y - podMidpoint.y) ** 2
+          );
+          return { rideId: ride.rideId, distance, bearing: calculateAngleBetweenRides(ride, pod) };
+      })
+      .sort((a, b) => a.distance - b.distance); // Sort in ascending order (closest first)
+}
+
 
 function renderPath(rideObjectType, ctx, FACTOR, originColor, destinationColor ){
 
-    console.log(rideObjectType.origin.long)
+    // console.log(rideObjectType.origin.long)
     const originX = Math.floor(rideObjectType.origin.long) * FACTOR;
     const originY = Math.floor(rideObjectType.origin.lat) * FACTOR;
     const destX = Math.floor(rideObjectType.destination.long) * FACTOR;
@@ -38,6 +84,13 @@ function renderPath(rideObjectType, ctx, FACTOR, originColor, destinationColor )
     ctx.strokeStyle = "black";
     ctx.stroke();
 
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "blue";
+    const midX = (originX + destX) / 2;
+    const midY = (originY + destY) / 2;
+    const identifier = rideObjectType.rideId ? rideObjectType.rideId.slice(0,5) : "pod" ;
+    ctx.fillText( identifier, midX, midY - 5);
+
 }
 
 export default async function grapher() {
@@ -58,20 +111,20 @@ export default async function grapher() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const data = await fetch("http://localhost:8080", {
+  const data = await fetch("http://localhost:5000", {
     // mode:"no-cors"
   });
-
+  
+  console.log(data);
   const ridesAndPod = await data.json();
-
+    
   const ridesArray = ridesAndPod.randomRides;
   const pod = ridesAndPod.pod;
-
-  console.log(ridesArray, pod);
-
-
-  // console.log(ridesArray)
-
+  
+  const ranked  = rankRidesByProximityToPod(ridesArray, pod);
+  
+  console.log(ranked);
+  
   const W = ctx.canvas.width,
     H = ctx.canvas.height;
 

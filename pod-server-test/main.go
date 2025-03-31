@@ -166,6 +166,8 @@ func main() {
 
 	helpers.UseHandler(podAndRides)
 
-	http.ListenAndServe(":8080", nil)
+	print("server started running")
+
+	http.ListenAndServe(":5000", nil)
 
 }

@@ -1,20 +1,22 @@
-import express from  "express"
-import path from "path"
-import cors from "cors"
+import express from "express";
+import cors from "cors";
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3000;
 
+app.use(cors());
 
-app.use(cors())
+// Serve static files from the 'static' directory (relative to the current file)
+app.use(express.static(path.join(__dirname, 'static')));
 
-// Serve static files from the 'public' directory
-app.use(express.static("C:/Users/Hashira/Desktop/nuclear-launch-codes/pods-client-test/static"));
-
-// // Optional: Serve index.html from the root URL
+// Optional: Serve index.html from the root URL
 // app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+//     res.sendFile(path.join(__dirname, 'static', 'index.html'));
 // });
 
 app.listen(port, () => {
