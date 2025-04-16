@@ -28,6 +28,11 @@ type DirectionsRequest struct {
 	Mode TravelMode
 }
 
+func FormatToString(loc types.Location) string {
+
+	return fmt.Sprintf("%f,%f", loc.Lat, loc.Lng)
+}
+
 func GetMapDirections(pod types.Pod) {
 	cfg := util.ReadConfig("C:/Users/HP/Desktop/nuclear-launch-codes/pods-test/config.json")
 
@@ -37,15 +42,25 @@ func GetMapDirections(pod types.Pod) {
 		fmt.Println("error loading maps", err)
 	}
 
-	direction :=
-		// &m.DirectionsRequest{Origin: "San Fransisco", Destination: "New Jersey"}
-		&m.DirectionsRequest{Origin: fmt.Sprintf("%f,%f", pod.PodOrigin.Lat, pod.PodOrigin.Lng), Destination: fmt.Sprintf("%f,%f", pod.PodDestination.Lat, pod.PodDestination.Lng)}
+	waypoints := []string{}
 
-	route, waypoints, err := client.Directions(ctx, direction)
+	for _, value := range pod.PodRides {
+		waypoints = append(waypoints, FormatToString(value.Origin))
+		waypoints = append(waypoints, FormatToString(value.Destination))
+	}
+
+	direction :=
+		&m.DirectionsRequest{
+			Origin:      fmt.Sprintf("%f,%f", pod.PodOrigin.Lat, pod.PodOrigin.Lng),
+			Destination: fmt.Sprintf("%f,%f", pod.PodDestination.Lat, pod.PodDestination.Lng),
+			Waypoints:   waypoints,
+		}
+
+	route, stops, err := client.Directions(ctx, direction)
 
 	if err != nil {
 		fmt.Println("directions request error", err)
 	}
 
-	fmt.Println(route, waypoints)
+	fmt.Println(route, stops)
 }

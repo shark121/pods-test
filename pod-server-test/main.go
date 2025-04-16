@@ -35,7 +35,7 @@ func getDistance(origin types.Location, destination types.Location) float64 {
 	return 0.000
 }
 
-func createRide(rideTime string, origin types.Location, destination types.Location, rideCapacity int16) types.RideObject {
+func createRide(rideTime string, origin types.Location, destination types.Location, rideCapacity int8) types.RideObject {
 	rideStatus := "pending"
 	rideID := uuid.New().String()
 	direction := getDirection(origin, destination)
@@ -87,20 +87,30 @@ func generateCoordinatesCloseToLocation(loc types.Location) types.Location {
 }
 
 func generateCoordinatesFarFromLocation(loc types.Location) types.Location {
-	randomLatOffset := (rand.Float64() - 0.5) * float64(rand.Int31n(200))
-	randomLngOffset := (rand.Float64() - 0.5) * float64(rand.Int31n(200))
 
-	newLat := loc.Lat + randomLatOffset
-	newLng := loc.Lng + randomLngOffset
+	const earthRadiusKm = 6371.0
 
-	if rand.Intn(2) == 1 {
-		newLat, newLng = newLng, newLat
-	}
+	distanceKm := 10 + rand.Float64()*40
+
+	bearing := rand.Float64() * 2 * math.Pi
+
+	latRad := loc.Lat * math.Pi / 180
+	lngRad := loc.Lng * math.Pi / 180
+
+	newLatRad := math.Asin(math.Sin(latRad)*math.Cos(distanceKm/earthRadiusKm) +
+		math.Cos(latRad)*math.Sin(distanceKm/earthRadiusKm)*math.Cos(bearing))
+
+	newLngRad := lngRad + math.Atan2(
+		math.Sin(bearing)*math.Sin(distanceKm/earthRadiusKm)*math.Cos(latRad),
+		math.Cos(distanceKm/earthRadiusKm)-math.Sin(latRad)*math.Sin(newLatRad),
+	)
+
+	newLat := newLatRad * 180 / math.Pi
+	newLng := newLngRad * 180 / math.Pi
 
 	return types.Location{
 		Lat: newLat,
 		Lng: newLng,
-		// PlaceID: loc.PlaceID,
 	}
 }
 
@@ -187,11 +197,11 @@ func generateRandomRides(number int8, local types.Location) []types.RideObject {
 }
 
 func main() {
-	//32.520845925634895, -92.71762474132422
 
 	seedOrigin := types.Location{Lat: 32.520845925634895, Lng: -92.71762474132422}
+	seedDestination := types.Location{Lat: 32.52454000792701, Lng: -92.7070350339111}
 
-	initRide := createRide("2023-10-27T10:00:00Z", generateCoordinatesCloseToLocation(seedOrigin), generateCoordinatesFarFromLocation(seedOrigin), 4)
+	initRide := createRide("2023-10-27T10:00:00Z", seedOrigin, seedDestination, 4)
 
 	pod := createPod(initRide)
 
@@ -206,9 +216,6 @@ func main() {
 	podAndRides := map[string]any{"randomRides": randomRides, "pod": pod, "ranked": rankRidesByProximityToPod(randomRides, pod)}
 
 	helpers.UseHandler(podAndRides)
-
-	pod.PodOrigin = types.Location{Lat: 32.520845925634895, Lng: -92.71762474132422}
-	pod.PodDestination = types.Location{Lat: 32.52454000792701, Lng: -92.7070350339111}
 
 	print("server started running")
 

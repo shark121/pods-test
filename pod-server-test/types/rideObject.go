@@ -11,7 +11,7 @@ type RideObject struct {
 	RideStatus   string   `json:"rideStatus"`
 	Origin       Location `json:"origin"`
 	Destination  Location `json:"destination"`
-	RideCapacity int16    `json:"rideCapacity"`
+	RideCapacity int8     `json:"rideCapacity"`
 	Direction    float64  `json:"direction"`
 	RideDistance float64  `json:"rideDistance"`
 	RideBearing  *float64 `json:"bearing"`
@@ -20,7 +20,7 @@ type RideObject struct {
 type Pod struct {
 	PodOrigin      Location              `json:"origin"`
 	PodDestination Location              `json:"destination"`
-	PodCapacity    int16                 `json:"podCapacity"`
+	PodCapacity    int8                  `json:"podCapacity"`
 	PodStatus      string                `json:"podStatus"`
 	PodID          string                `json:"podId"`
 	PodRides       map[string]RideObject `json:"podRides"`
