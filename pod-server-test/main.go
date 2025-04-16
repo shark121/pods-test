@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"math"
 	"math/rand"
 	"net/http"
+	"sort"
 
 	"github.com/google/uuid"
 	"github.com/pod-server-test/helpers"
@@ -34,6 +37,7 @@ type RideObject struct {
 	RideCapacity int16    `json:"rideCapacity"`
 	Direction    float64  `json:"direction"`
 	RideDistance float64  `json:"rideDistance"`
+	RideBearing  *float64 `json:"bearing"`
 }
 
 func getDirection(origin Location, destination Location) float64 {
@@ -136,6 +140,72 @@ func generateCoordinatesFarFromLocation(loc Location) Location {
 	}
 }
 
+type Path struct {
+	Origin      Location
+	Destination Location
+	myInt       interface {
+		Area() int
+	}
+}
+
+func getMidpoint(origin Location, destination Location) map[string]float64 {
+
+	return map[string]float64{
+		"x": float64((origin.Long + destination.Long)) / 2,
+		"y": float64((origin.Lat + destination.Lat)) / 2,
+	}
+}
+
+func calculateBearing(origin, destination Location) float64 {
+	toRadians := func(deg float64) float64 { return (deg * math.Pi) / 180 }
+	toDegrees := func(rad float64) float64 { return (rad * 180) / math.Pi }
+
+	lat1 := toRadians(origin.Lat)
+	lat2 := toRadians(destination.Lat)
+	deltaLong := toRadians(destination.Long - origin.Long)
+
+	y := math.Sin(deltaLong) * math.Cos(lat2)
+	x := math.Cos(lat1)*math.Sin(lat2) - math.Sin(lat1)*math.Cos(lat2)*math.Cos(deltaLong)
+
+	bearing := toDegrees(math.Atan2(y, x))
+	return math.Mod(bearing+360, 360)
+}
+
+func calculateAngleBetweenRides(rideOneOrigin, rideOneDestination, rideTwoOrigin, rideTwoDestination Location) float64 {
+	bearing1 := calculateBearing(rideOneOrigin, rideOneDestination)
+	bearing2 := calculateBearing(rideTwoOrigin, rideTwoDestination)
+
+	angleDifference := math.Abs(bearing1 - bearing2)
+	if angleDifference > 180 {
+		return 360 - angleDifference
+	}
+	return angleDifference
+}
+
+func rankRidesByProximityToPod(ridesArray []RideObject, pod Pod) []RideObject {
+	podMidpoint := getMidpoint(pod.PodOrigin, pod.PodDestination)
+
+	fmt.Println(podMidpoint)
+
+	rankedRides := make([]RideObject, len(ridesArray))
+	for i, ride := range ridesArray {
+		rideMidpoint := getMidpoint(ride.Origin, ride.Destination)
+		distance := math.Sqrt(math.Pow(rideMidpoint["x"]-podMidpoint["x"], 2) + math.Pow(rideMidpoint["y"]-podMidpoint["y"], 2))
+		bearing := calculateAngleBetweenRides(ride.Origin, ride.Destination, pod.PodOrigin, pod.PodDestination)
+
+		rideCopy := ride
+		rideCopy.RideDistance = distance
+		rideCopy.RideBearing = &bearing
+		rankedRides[i] = rideCopy
+	}
+
+	sort.Slice(rankedRides, func(i, j int) bool {
+		return rankedRides[i].RideDistance < rankedRides[j].RideDistance
+	})
+
+	return rankedRides
+}
+
 func generateRandomRides(number int8, local Location) []RideObject {
 	rides := []RideObject{}
 	for range number {
@@ -162,7 +232,7 @@ func main() {
 
 	randomRides := generateRandomRides(10, seedOrigin)
 
-	podAndRides := map[string]any{"randomRides": randomRides, "pod": pod}
+	podAndRides := map[string]any{"randomRides": randomRides, "pod": pod, "ranked": rankRidesByProximityToPod(randomRides, pod)}
 
 	helpers.UseHandler(podAndRides)
 

@@ -156,7 +156,7 @@ function rankRidesByProximityToPod(ridesArray, pod) {
           );
           return { ...ride, distance, bearing: calculateAngleBetweenRides(ride, pod) };
       })
-      .sort((a, b) => a.distance - b.distance); // Sort in ascending order (closest first)
+      .sort((a, b) => a.distance - b.distance); 
 }
 
 /**
@@ -239,9 +239,6 @@ export default async function grapher() {
   const ranked  = rankRidesByProximityToPod(ridesArray, pod);
 
   console.log(ridesArray);
-
-
-  // drawGraph(ctx, ridesArray, pod, 3);
   
   console.log(ranked);
   
@@ -265,7 +262,7 @@ export default async function grapher() {
   // renderPath(pod, ctx, FACTOR)
 
 
-  drawGraph( ridesArray, pod.origin, pod.destination, ctx,  FACTOR);
+  drawGraph(ridesArray, pod.origin, pod.destination, ctx,  FACTOR);
 }
 
 grapher();
