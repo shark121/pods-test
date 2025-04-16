@@ -9,56 +9,39 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pod-server-test/helpers"
+	"github.com/pod-server-test/types"
 
 	"github.com/pod-server-test/directions"
 )
 
-type Location struct {
-	Lat float64 `json:"lat"`
-	Lng float64 `json:"Lng"`
-	// PlaceID string  `json:"placeId"`
-}
-
 type User struct {
-	Name            string   `json:"name"`
-	Age             int16    `json:"age"`
-	DefaultLocation Location `json:"defaultLocation"`
-	Dob             string   `json:"dob"`
+	Name            string         `json:"name"`
+	Age             int16          `json:"age"`
+	DefaultLocation types.Location `json:"defaultLocation"`
+	Dob             string         `json:"dob"`
 }
 
-func createUser(name string, age int16, defaultLocation Location, dob string) User {
+func createUser(name string, age int16, defaultLocation types.Location, dob string) User {
 	return User{Name: name, Age: age, DefaultLocation: defaultLocation, Dob: dob}
 }
 
-type RideObject struct {
-	RideID       string   `json:"rideId"`
-	RideTime     string   `json:"rideTime"`
-	RideStatus   string   `json:"rideStatus"`
-	Origin       Location `json:"origin"`
-	Destination  Location `json:"destination"`
-	RideCapacity int16    `json:"rideCapacity"`
-	Direction    float64  `json:"direction"`
-	RideDistance float64  `json:"rideDistance"`
-	RideBearing  *float64 `json:"bearing"`
-}
-
-func getDirection(origin Location, destination Location) float64 {
+func getDirection(origin types.Location, destination types.Location) float64 {
 	// fmt.Println(origin, destination)
 	return 0.000
 }
 
-func getDistance(origin Location, destination Location) float64 {
+func getDistance(origin types.Location, destination types.Location) float64 {
 	// fmt.Println(origin, destination)
 	return 0.000
 }
 
-func createRide(rideTime string, origin Location, destination Location, rideCapacity int16) RideObject {
+func createRide(rideTime string, origin types.Location, destination types.Location, rideCapacity int16) types.RideObject {
 	rideStatus := "pending"
 	rideID := uuid.New().String()
 	direction := getDirection(origin, destination)
 	distance := getDistance(origin, destination)
 
-	return RideObject{
+	return types.RideObject{
 		RideID:       rideID,
 		RideTime:     rideTime,
 		RideStatus:   rideStatus,
@@ -70,61 +53,40 @@ func createRide(rideTime string, origin Location, destination Location, rideCapa
 	}
 }
 
-type Pod struct {
-	PodOrigin      Location              `json:"origin"`
-	PodDestination Location              `json:"destination"`
-	PodCapacity    int16                 `json:"podCapacity"`
-	PodStatus      string                `json:"podStatus"`
-	PodID          string                `json:"podId"`
-	PodRides       map[string]RideObject `json:"podRides"`
-	Waypoints      []Location            `json:"waypoints"`
-	PodDirection   float64               `json:"podDirection"`
-	PodDistance    float64               `json:"podDistance"`
-	Time           string                `json:"time"`
-}
-
-func createPod(ride RideObject) Pod {
+func createPod(ride types.RideObject) types.Pod {
 	podStatus := "pending"
 	podID := uuid.New().String()
-	podRides := map[string]RideObject{ride.RideID: ride}
+	podRides := map[string]types.RideObject{ride.RideID: ride}
 	podDirection := ride.Direction
 	podDistance := ride.RideDistance
 	time := ride.RideTime
 
-	return Pod{
+	return types.Pod{
 		PodOrigin:      ride.Origin,
 		PodDestination: ride.Destination,
 		PodCapacity:    ride.RideCapacity,
 		PodStatus:      podStatus,
 		PodID:          podID,
 		PodRides:       podRides,
-		Waypoints:      []Location{},
+		Waypoints:      []types.Location{},
 		PodDirection:   podDirection,
 		PodDistance:    podDistance,
 		Time:           time,
 	}
 }
 
-func (p *Pod) addRide(ride RideObject) {
-	p.PodRides[ride.RideID] = ride
-}
-
-func (p *Pod) removeRide(ride RideObject) {
-	delete(p.PodRides, ride.RideID)
-}
-
-func generateCoordinatesCloseToLocation(loc Location) Location {
+func generateCoordinatesCloseToLocation(loc types.Location) types.Location {
 	randomLat := (rand.Float64() - 0.5) * float64(rand.Int31n(100))
 	randomLng := (rand.Float64() - 0.5) * float64(rand.Int31n(100))
 
-	return Location{
+	return types.Location{
 		Lat: loc.Lat + randomLat,
 		Lng: loc.Lng + randomLng,
 		// PlaceID: loc.PlaceID,
 	}
 }
 
-func generateCoordinatesFarFromLocation(loc Location) Location {
+func generateCoordinatesFarFromLocation(loc types.Location) types.Location {
 	randomLatOffset := (rand.Float64() - 0.5) * float64(rand.Int31n(200))
 	randomLngOffset := (rand.Float64() - 0.5) * float64(rand.Int31n(200))
 
@@ -135,7 +97,7 @@ func generateCoordinatesFarFromLocation(loc Location) Location {
 		newLat, newLng = newLng, newLat
 	}
 
-	return Location{
+	return types.Location{
 		Lat: newLat,
 		Lng: newLng,
 		// PlaceID: loc.PlaceID,
@@ -143,14 +105,14 @@ func generateCoordinatesFarFromLocation(loc Location) Location {
 }
 
 type Path struct {
-	Origin      Location
-	Destination Location
+	Origin      types.Location
+	Destination types.Location
 	myInt       interface {
 		Area() int
 	}
 }
 
-func getMidpoint(origin Location, destination Location) map[string]float64 {
+func getMidpoint(origin types.Location, destination types.Location) map[string]float64 {
 
 	return map[string]float64{
 		"x": float64((origin.Lng + destination.Lng)) / 2,
@@ -158,7 +120,7 @@ func getMidpoint(origin Location, destination Location) map[string]float64 {
 	}
 }
 
-func calculateBearing(origin, destination Location) float64 {
+func calculateBearing(origin, destination types.Location) float64 {
 	toRadians := func(deg float64) float64 { return (deg * math.Pi) / 180 }
 	toDegrees := func(rad float64) float64 { return (rad * 180) / math.Pi }
 
@@ -173,7 +135,7 @@ func calculateBearing(origin, destination Location) float64 {
 	return math.Mod(bearing+360, 360)
 }
 
-func calculateAngleBetweenRides(rideOneOrigin, rideOneDestination, rideTwoOrigin, rideTwoDestination Location) float64 {
+func calculateAngleBetweenRides(rideOneOrigin, rideOneDestination, rideTwoOrigin, rideTwoDestination types.Location) float64 {
 	bearing1 := calculateBearing(rideOneOrigin, rideOneDestination)
 	bearing2 := calculateBearing(rideTwoOrigin, rideTwoDestination)
 
@@ -184,12 +146,12 @@ func calculateAngleBetweenRides(rideOneOrigin, rideOneDestination, rideTwoOrigin
 	return angleDifference
 }
 
-func rankRidesByProximityToPod(ridesArray []RideObject, pod Pod) []RideObject {
+func rankRidesByProximityToPod(ridesArray []types.RideObject, pod types.Pod) []types.RideObject {
 	podMidpoint := getMidpoint(pod.PodOrigin, pod.PodDestination)
 
 	fmt.Println(podMidpoint)
 
-	rankedRides := make([]RideObject, len(ridesArray))
+	rankedRides := make([]types.RideObject, len(ridesArray))
 	for i, ride := range ridesArray {
 		rideMidpoint := getMidpoint(ride.Origin, ride.Destination)
 		distance := math.Sqrt(math.Pow(rideMidpoint["x"]-podMidpoint["x"], 2) + math.Pow(rideMidpoint["y"]-podMidpoint["y"], 2))
@@ -208,8 +170,8 @@ func rankRidesByProximityToPod(ridesArray []RideObject, pod Pod) []RideObject {
 	return rankedRides
 }
 
-func generateRandomRides(number int8, local Location) []RideObject {
-	rides := []RideObject{}
+func generateRandomRides(number int8, local types.Location) []types.RideObject {
+	rides := []types.RideObject{}
 	for range number {
 		origin := generateCoordinatesFarFromLocation(local)
 		destination := generateCoordinatesFarFromLocation(local)
@@ -226,7 +188,7 @@ func generateRandomRides(number int8, local Location) []RideObject {
 
 func main() {
 
-	seedOrigin := Location{Lat: -11.0522, Lng: 34.2437}
+	seedOrigin := types.Location{Lat: -11.0522, Lng: 34.2437}
 
 	initRide := createRide("2023-10-27T10:00:00Z", generateCoordinatesCloseToLocation(seedOrigin), generateCoordinatesFarFromLocation(seedOrigin), 4)
 
