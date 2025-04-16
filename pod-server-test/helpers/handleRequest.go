@@ -2,11 +2,11 @@ package helpers
 
 import (
 	"context"
-	"math"
 	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/mmcloughlin/geohash"
+	"github.com/pod-server-test/calc"
 	t "github.com/pod-server-test/types"
 )
 
@@ -15,6 +15,8 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 	const maxDistance = 5.0
 	const maxWaitTime = 300
 	const maxCapacity = 4
+	const defaultMaxAngle = 60
+	const defaultMaxKm = 50
 
 	geo := geohash.EncodeWithPrecision(req.Origin.Lat, req.Origin.Lng, precision)
 	podsRef := client.Collection("pods")
@@ -35,11 +37,16 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 			if len(pod.PodRides) >= int(pod.PodCapacity) {
 				continue
 			}
+
 			if time.Now().Unix()-pod.CreatedAt.Unix() > maxWaitTime {
 				continue
 			}
-			if !isCloseEnough(pod.PodOrigin, req.Origin, maxDistance) ||
-				!isCloseEnough(pod.PodDestination, req.Destination, maxDistance) {
+			// if !isCloseEnough(pod.PodOrigin, req.Origin, maxDistance) ||
+			// 	!isCloseEnough(pod.PodDestination, req.Destination, maxDistance) {
+			// 	continue
+			// }
+
+			if !isCloseEnough(pod, req, defaultMaxKm, defaultMaxAngle) {
 				continue
 			}
 
@@ -68,20 +75,18 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 
 //TODO: work on this function
 
-func isCloseEnough(loc1, loc2 t.Location, maxKm float64) bool {
-	const R = 6371
-	dLat := toRad(loc2.Lat - loc1.Lat)
-	dLng := toRad(loc2.Lng - loc1.Lng)
-	lat1 := toRad(loc1.Lat)
-	lat2 := toRad(loc2.Lat)
+func isCloseEnough(pod t.Pod, req t.RideObject, maxKm float64, maxAngle float64) bool {
 
-	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
-		math.Cos(lat1)*math.Cos(lat2)*
-			math.Sin(dLng/2)*math.Sin(dLng/2)
-	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	return R*c <= maxKm
-}
+	angleDifference :=
+		calc.CalculateAngleBetweenRides(pod.PodOrigin, pod.PodDestination, req.Origin, req.Destination)
 
-func toRad(deg float64) float64 {
-	return deg * math.Pi / 180
+	podMid := calc.GetMidpoint(pod.PodOrigin, pod.PodDestination)
+	reqMid := calc.GetMidpoint(req.Origin, req.Destination)
+
+	podMidToLoc := t.Location{Lat: podMid["x"], Lng: podMid["y"]}
+	reqMidToLoc := t.Location{Lat: reqMid["x"], Lng: reqMid["y"]}
+
+	distanceBetweenMidPoints := calc.DistanceBetweenTwoPoints(podMidToLoc, reqMidToLoc)
+
+	return (angleDifference < maxAngle) && (distanceBetweenMidPoints < maxKm)
 }

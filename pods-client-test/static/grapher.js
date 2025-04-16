@@ -230,8 +230,9 @@ export default async function grapher() {
     // mode:"no-cors"
   });
   
-  console.log(data);
-  const ridesAndPod = await data.json();
+   const ridesAndPod = await data.json();
+
+   console.log(ridesAndPod)
     
   const ridesArray = ridesAndPod.randomRides;
   const pod = ridesAndPod.pod;
