@@ -51,9 +51,10 @@ func GetMapDirections(pod types.Pod) {
 
 	direction :=
 		&m.DirectionsRequest{
-			Origin:      fmt.Sprintf("%f,%f", pod.PodOrigin.Lat, pod.PodOrigin.Lng),
-			Destination: fmt.Sprintf("%f,%f", pod.PodDestination.Lat, pod.PodDestination.Lng),
+			Origin:      FormatToString(pod.PodOrigin),
+			Destination: FormatToString(pod.PodDestination),
 			Waypoints:   waypoints,
+			Optimize:    true,
 		}
 
 	route, stops, err := client.Directions(ctx, direction)
@@ -62,5 +63,5 @@ func GetMapDirections(pod types.Pod) {
 		fmt.Println("directions request error", err)
 	}
 
-	fmt.Println(route, stops)
+	fmt.Println(route, "\n", stops)
 }

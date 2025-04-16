@@ -11,7 +11,7 @@ import (
 	"github.com/pod-server-test/helpers"
 	"github.com/pod-server-test/types"
 
-	"github.com/pod-server-test/directions"
+	directions "github.com/pod-server-test/mapUtils"
 )
 
 type User struct {
@@ -50,28 +50,6 @@ func createRide(rideTime string, origin types.Location, destination types.Locati
 		RideCapacity: rideCapacity,
 		Direction:    direction,
 		RideDistance: distance,
-	}
-}
-
-func createPod(ride types.RideObject) types.Pod {
-	podStatus := "pending"
-	podID := uuid.New().String()
-	podRides := map[string]types.RideObject{ride.RideID: ride}
-	podDirection := ride.Direction
-	podDistance := ride.RideDistance
-	time := ride.RideTime
-
-	return types.Pod{
-		PodOrigin:      ride.Origin,
-		PodDestination: ride.Destination,
-		PodCapacity:    ride.RideCapacity,
-		PodStatus:      podStatus,
-		PodID:          podID,
-		PodRides:       podRides,
-		Waypoints:      []types.Location{},
-		PodDirection:   podDirection,
-		PodDistance:    podDistance,
-		Time:           time,
 	}
 }
 
@@ -203,7 +181,7 @@ func main() {
 
 	initRide := createRide("2023-10-27T10:00:00Z", seedOrigin, seedDestination, 4)
 
-	pod := createPod(initRide)
+	pod := types.CreatePod(initRide)
 
 	randomRides := generateRandomRides(3, seedOrigin)
 
