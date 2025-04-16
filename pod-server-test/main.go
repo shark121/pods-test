@@ -12,9 +12,9 @@ import (
 )
 
 type Location struct {
-	Lat     float64 `json:"lat"`
-	Long    float64 `json:"long"`
-	PlaceID string  `json:"placeId"`
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"Lng"`
+	// PlaceID string  `json:"placeId"`
 }
 
 type User struct {
@@ -113,30 +113,30 @@ func (p *Pod) removeRide(ride RideObject) {
 
 func generateCoordinatesCloseToLocation(loc Location) Location {
 	randomLat := (rand.Float64() - 0.5) * float64(rand.Int31n(100))
-	randomLong := (rand.Float64() - 0.5) * float64(rand.Int31n(100))
+	randomLng := (rand.Float64() - 0.5) * float64(rand.Int31n(100))
 
 	return Location{
-		Lat:     loc.Lat + randomLat,
-		Long:    loc.Long + randomLong,
-		PlaceID: loc.PlaceID,
+		Lat: loc.Lat + randomLat,
+		Lng: loc.Lng + randomLng,
+		// PlaceID: loc.PlaceID,
 	}
 }
 
 func generateCoordinatesFarFromLocation(loc Location) Location {
 	randomLatOffset := (rand.Float64() - 0.5) * float64(rand.Int31n(200))
-	randomLongOffset := (rand.Float64() - 0.5) * float64(rand.Int31n(200))
+	randomLngOffset := (rand.Float64() - 0.5) * float64(rand.Int31n(200))
 
 	newLat := loc.Lat + randomLatOffset
-	newLong := loc.Long + randomLongOffset
+	newLng := loc.Lng + randomLngOffset
 
 	if rand.Intn(2) == 1 {
-		newLat, newLong = newLong, newLat
+		newLat, newLng = newLng, newLat
 	}
 
 	return Location{
-		Lat:     newLat,
-		Long:    newLong,
-		PlaceID: loc.PlaceID,
+		Lat: newLat,
+		Lng: newLng,
+		// PlaceID: loc.PlaceID,
 	}
 }
 
@@ -151,7 +151,7 @@ type Path struct {
 func getMidpoint(origin Location, destination Location) map[string]float64 {
 
 	return map[string]float64{
-		"x": float64((origin.Long + destination.Long)) / 2,
+		"x": float64((origin.Lng + destination.Lng)) / 2,
 		"y": float64((origin.Lat + destination.Lat)) / 2,
 	}
 }
@@ -162,10 +162,10 @@ func calculateBearing(origin, destination Location) float64 {
 
 	lat1 := toRadians(origin.Lat)
 	lat2 := toRadians(destination.Lat)
-	deltaLong := toRadians(destination.Long - origin.Long)
+	deltaLng := toRadians(destination.Lng - origin.Lng)
 
-	y := math.Sin(deltaLong) * math.Cos(lat2)
-	x := math.Cos(lat1)*math.Sin(lat2) - math.Sin(lat1)*math.Cos(lat2)*math.Cos(deltaLong)
+	y := math.Sin(deltaLng) * math.Cos(lat2)
+	x := math.Cos(lat1)*math.Sin(lat2) - math.Sin(lat1)*math.Cos(lat2)*math.Cos(deltaLng)
 
 	bearing := toDegrees(math.Atan2(y, x))
 	return math.Mod(bearing+360, 360)
@@ -224,7 +224,7 @@ func generateRandomRides(number int8, local Location) []RideObject {
 
 func main() {
 
-	seedOrigin := Location{Lat: -11.0522, Long: 34.2437, PlaceID: "LA"}
+	seedOrigin := Location{Lat: -11.0522, Lng: 34.2437}
 
 	initRide := createRide("2023-10-27T10:00:00Z", generateCoordinatesCloseToLocation(seedOrigin), generateCoordinatesFarFromLocation(seedOrigin), 4)
 
