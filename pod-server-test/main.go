@@ -9,6 +9,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pod-server-test/helpers"
+
+	"github.com/pod-server-test/directions"
 )
 
 type Location struct {
@@ -230,7 +232,7 @@ func main() {
 
 	pod := createPod(initRide)
 
-	randomRides := generateRandomRides(10, seedOrigin)
+	randomRides := generateRandomRides(3, seedOrigin)
 
 	podAndRides := map[string]any{"randomRides": randomRides, "pod": pod, "ranked": rankRidesByProximityToPod(randomRides, pod)}
 
@@ -239,5 +241,7 @@ func main() {
 	print("server started running")
 
 	http.ListenAndServe(":5000", nil)
+
+	directions.GetMapDirections(randomRides)
 
 }
