@@ -187,8 +187,9 @@ func generateRandomRides(number int8, local types.Location) []types.RideObject {
 }
 
 func main() {
+	//32.520845925634895, -92.71762474132422
 
-	seedOrigin := types.Location{Lat: -11.0522, Lng: 34.2437}
+	seedOrigin := types.Location{Lat: 32.520845925634895, Lng: -92.71762474132422}
 
 	initRide := createRide("2023-10-27T10:00:00Z", generateCoordinatesCloseToLocation(seedOrigin), generateCoordinatesFarFromLocation(seedOrigin), 4)
 
@@ -196,14 +197,23 @@ func main() {
 
 	randomRides := generateRandomRides(3, seedOrigin)
 
+	rankedRides := rankRidesByProximityToPod(randomRides, pod)
+
+	for i := range 2 {
+		pod.PodRides[rankedRides[i].RideID] = rankedRides[i]
+	}
+
 	podAndRides := map[string]any{"randomRides": randomRides, "pod": pod, "ranked": rankRidesByProximityToPod(randomRides, pod)}
 
 	helpers.UseHandler(podAndRides)
+
+	pod.PodOrigin = types.Location{Lat: 32.520845925634895, Lng: -92.71762474132422}
+	pod.PodDestination = types.Location{Lat: 32.52454000792701, Lng: -92.7070350339111}
 
 	print("server started running")
 
 	http.ListenAndServe(":5000", nil)
 
-	directions.GetMapDirections(randomRides)
+	directions.GetMapDirections(pod)
 
 }

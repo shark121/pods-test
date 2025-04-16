@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pod-server-test/types"
+
 	util "github.com/pod-server-test/utils"
 
 	m "googlemaps.github.io/maps"
@@ -27,7 +28,7 @@ type DirectionsRequest struct {
 	Mode TravelMode
 }
 
-func GetMapDirections(rides []types.RideObject) {
+func GetMapDirections(pod types.Pod) {
 	cfg := util.ReadConfig("C:/Users/HP/Desktop/nuclear-launch-codes/pods-test/config.json")
 
 	client, err := m.NewClient(m.WithAPIKey(cfg.Maps_key))
@@ -36,8 +37,15 @@ func GetMapDirections(rides []types.RideObject) {
 		fmt.Println("error loading maps", err)
 	}
 
-	client.Directions(ctx, x)
+	direction :=
+		// &m.DirectionsRequest{Origin: "San Fransisco", Destination: "New Jersey"}
+		&m.DirectionsRequest{Origin: fmt.Sprintf("%f,%f", pod.PodOrigin.Lat, pod.PodOrigin.Lng), Destination: fmt.Sprintf("%f,%f", pod.PodDestination.Lat, pod.PodDestination.Lng)}
 
-	// fmt.Println(cfg.Maps_key, "from directions")
-	// client.Directions(ctx)
+	route, waypoints, err := client.Directions(ctx, direction)
+
+	if err != nil {
+		fmt.Println("directions request error", err)
+	}
+
+	fmt.Println(route, waypoints)
 }
