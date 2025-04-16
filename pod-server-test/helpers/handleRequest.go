@@ -83,8 +83,8 @@ func isCloseEnough(pod t.Pod, req t.RideObject, maxKm float64, maxAngle float64)
 	podMid := calc.GetMidpoint(pod.PodOrigin, pod.PodDestination)
 	reqMid := calc.GetMidpoint(req.Origin, req.Destination)
 
-	podMidToLoc := t.Location{Lat: podMid["x"], Lng: podMid["y"]}
-	reqMidToLoc := t.Location{Lat: reqMid["x"], Lng: reqMid["y"]}
+	podMidToLoc := t.Location{Lat: podMid["y"], Lng: podMid["x"]}
+	reqMidToLoc := t.Location{Lat: reqMid["y"], Lng: reqMid["x"]}
 
 	distanceBetweenMidPoints := calc.DistanceBetweenTwoPoints(podMidToLoc, reqMidToLoc)
 
