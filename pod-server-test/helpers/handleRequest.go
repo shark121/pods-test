@@ -66,6 +66,8 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 	return err
 }
 
+//TODO: work on this function
+
 func isCloseEnough(loc1, loc2 t.Location, maxKm float64) bool {
 	const R = 6371
 	dLat := toRad(loc2.Lat - loc1.Lat)
