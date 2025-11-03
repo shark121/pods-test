@@ -3,7 +3,7 @@ package calc
 import (
 	"math"
 
-	"github.com/pod-server-test/types"
+	"github.com/shark121/pods-test/types"
 )
 
 func GetMidpoint(origin types.Location, destination types.Location) map[string]float64 {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pod-server-test/types"
+	"github.com/shark121/pods-test/types"
 
-	util "github.com/pod-server-test/utils"
+	util "github.com/shark121/pods-test/utils"
 
 	m "googlemaps.github.io/maps"
 )

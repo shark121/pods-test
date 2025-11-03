@@ -1,4 +1,4 @@
-module github.com/pod-server-test
+module github.com/shark121/pods-test
 
 go 1.23.2
 
