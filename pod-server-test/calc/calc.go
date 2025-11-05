@@ -28,8 +28,7 @@ func CalculateBearing(origin, destination types.Location) float64 {
 }
 
 func DistanceBetweenTwoPoints(loc1, loc2 types.Location) float64 {
-	// return value in km
-	const R = 6371
+	R := 6371.00
 	dLat := toRad(loc2.Lat - loc1.Lat)
 	dLng := toRad(loc2.Lng - loc1.Lng)
 	lat1 := toRad(loc1.Lat)

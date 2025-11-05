@@ -6,29 +6,14 @@ import (
 	"io"
 	"net/http"
 
+	firebaseutils "github.com/shark121/pods-test/firebaseUtils"
 	podUtils "github.com/shark121/pods-test/podUtils"
 	t "github.com/shark121/pods-test/types"
+
 	check "github.com/shark121/pods-test/utils"
 )
 
-// type location struct {
-// 	lat     float64
-// 	long    float64
-// 	placeId string
-// }
-
-// type RideObject struct {
-// 	rideId       string
-// 	rideTime     string
-// 	rideStatus   string
-// 	origin       location
-// 	destination  location
-// 	rideCapacity int16
-// 	direction    float64
-// 	rideDistance float64
-// }
-
-func CreateHandler() func(res http.ResponseWriter, req *http.Request) {
+func CreateHandler(appInstance firebaseutils.Instance) func(res http.ResponseWriter, req *http.Request) {
 
 	return func(res http.ResponseWriter, req *http.Request) {
 
@@ -58,6 +43,8 @@ func CreateHandler() func(res http.ResponseWriter, req *http.Request) {
 
 		pod := podUtils.MatchRide(reqBodyJson)
 
+		podUtils.HandleRideRequest(appInstance.Ctx, appInstance.Client, reqBodyJson)
+
 		// response, err := json.Marshal(data)
 
 		// if err != nil {
@@ -69,7 +56,7 @@ func CreateHandler() func(res http.ResponseWriter, req *http.Request) {
 
 }
 
-func UseHandler() {
-	getHandler := CreateHandler()
+func UseHandler(appInstance firebaseutils.Instance) {
+	getHandler := CreateHandler(appInstance)
 	http.HandleFunc("/", getHandler)
 }

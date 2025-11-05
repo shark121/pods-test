@@ -2,6 +2,7 @@ package podUtils
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -19,6 +20,8 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 	const defaultMaxKm = 50
 
 	geo := geohash.EncodeWithPrecision(req.Origin.Lat, req.Origin.Lng, precision)
+	fmt.Println("hash :", geo, geohash.Neighbors(geo))
+
 	podsRef := client.Collection("pods")
 
 	nearby := append([]string{geo}, geohash.Neighbors(geo)...)
