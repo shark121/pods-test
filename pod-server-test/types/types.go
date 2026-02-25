@@ -25,16 +25,16 @@ type RideObject struct {
 }
 
 type Pod struct {
-	PodOrigin      Location              `json:"origin"`
-	PodDestination Location              `json:"destination"`
-	PodCapacity    int8                  `json:"podCapacity"`
-	PodStatus      string                `json:"podStatus"`
-	PodID          string                `json:"podId"`
-	PodRides       map[string]RideObject `json:"podRides"`
-	Waypoints      []Location            `json:"waypoints"`
-	PodDirection   float64               `json:"podDirection"`
-	PodDistance    float64               `json:"podDistance"`
-	CreatedAt      time.Time             `json:"createdAt"`
+	Origin       Location              `json:"origin"`
+	Destination  Location              `json:"destination"`
+	PodCapacity  int8                  `json:"podCapacity"`
+	PodStatus    string                `json:"podStatus"`
+	PodID        string                `json:"podId"`
+	PodRides     map[string]RideObject `json:"podRides"`
+	Waypoints    []Location            `json:"waypoints"`
+	PodDirection float64               `json:"podDirection"`
+	PodDistance  float64               `json:"podDistance"`
+	CreatedAt    time.Time             `json:"createdAt"`
 }
 
 func (p *Pod) AddRide(ride RideObject) {
@@ -53,16 +53,16 @@ func CreatePod(ride RideObject) Pod {
 	podDistance := ride.RideDistance
 
 	return Pod{
-		PodOrigin:      ride.Origin,
-		PodDestination: ride.Destination,
-		PodCapacity:    ride.RideCapacity,
-		PodStatus:      podStatus,
-		PodID:          podID,
-		PodRides:       podRides,
-		Waypoints:      []Location{},
-		PodDirection:   podDirection,
-		PodDistance:    podDistance,
-		CreatedAt:      time.Now(),
+		Origin:       ride.Origin,
+		Destination:  ride.Destination,
+		PodCapacity:  ride.RideCapacity,
+		PodStatus:    podStatus,
+		PodID:        podID,
+		PodRides:     podRides,
+		Waypoints:    []Location{},
+		PodDirection: podDirection,
+		PodDistance:  podDistance,
+		CreatedAt:    time.Now(),
 	}
 }
 
@@ -71,4 +71,9 @@ type User struct {
 	Age             int16    `json:"age"`
 	DefaultLocation Location `json:"defaultLocation"`
 	Dob             string   `json:"dob"`
+}
+
+type HasOriginAndDestination struct {
+	Origin      Location
+	Destination Location
 }

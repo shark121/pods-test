@@ -15,7 +15,6 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 	const precision = 6
 	const maxDistance = 5.0
 	const maxWaitTime = 300
-	const maxCapacity = 4
 	const defaultMaxAngle = 60
 	const defaultMaxKm = 50
 
@@ -28,7 +27,7 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 	var matchedPod *firestore.DocumentSnapshot
 
 	for _, h := range nearby {
-		iter := podsRef.Where("geohash", "==", h).Documents(ctx)
+		iter := podsRef.Where(geo, "==", h).Documents(ctx)
 		for {
 			doc, err := iter.Next()
 			if err != nil {
@@ -37,24 +36,19 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 			var pod t.Pod
 			doc.DataTo(&pod)
 
-			if len(pod.PodRides) >= int(pod.PodCapacity) {
+			if len(pod.PodRides) == int(pod.PodCapacity) {
 				continue
 			}
 
 			if time.Now().Unix()-pod.CreatedAt.Unix() > maxWaitTime {
 				continue
 			}
-			// if !isCloseEnough(pod.PodOrigin, req.Origin, maxDistance) ||
-			// 	!isCloseEnough(pod.PodDestination, req.Destination, maxDistance) {
-			// 	continue
-			// }
 
-			if !isCloseEnough(pod, req, defaultMaxKm, defaultMaxAngle) {
-				continue
+			if isCloseEnough(pod, req, defaultMaxKm, defaultMaxAngle) {
+				matchedPod = doc
+				break
 			}
 
-			matchedPod = doc
-			break
 		}
 
 		if matchedPod != nil {
@@ -81,9 +75,9 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 func isCloseEnough(pod t.Pod, req t.RideObject, maxKm float64, maxAngle float64) bool {
 
 	angleDifference :=
-		calc.CalculateAngleBetweenRides(pod.PodOrigin, pod.PodDestination, req.Origin, req.Destination)
+		calc.CalculateAngleBetweenRides(pod.Origin, pod.Destination, req.Origin, req.Destination)
 
-	podMid := calc.GetMidpoint(pod.PodOrigin, pod.PodDestination)
+	podMid := calc.GetMidpoint(pod.Origin, pod.Destination)
 	reqMid := calc.GetMidpoint(req.Origin, req.Destination)
 
 	podMidToLoc := t.Location{Lat: podMid["y"], Lng: podMid["x"]}

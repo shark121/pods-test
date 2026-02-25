@@ -51,8 +51,8 @@ func GetMapDirections(pod types.Pod) {
 
 	direction :=
 		&m.DirectionsRequest{
-			Origin:      FormatToString(pod.PodOrigin),
-			Destination: FormatToString(pod.PodDestination),
+			Origin:      FormatToString(pod.Origin),
+			Destination: FormatToString(pod.Destination),
 			Waypoints:   waypoints,
 			Optimize:    true,
 		}
