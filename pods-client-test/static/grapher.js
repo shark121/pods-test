@@ -14,7 +14,7 @@ function calculateDistance(pointA, pointB) {
   const deltaLong = toRadians(pointB.long - pointA.long);
 
   const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-            Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLong / 2) * Math.sin(deltaLong / 2);
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLong / 2) * Math.sin(deltaLong / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c; // Return distance in kilometers
@@ -31,35 +31,35 @@ const toRadians = (deg) => (deg * Math.PI) / 180;
 function drawGraph(ridesArray, origin, destination, ctx, FACTOR) {
   // Initialize graph with nodes (origin, destinations, and waypoints)
   const nodes = [origin, ...ridesArray.map(ride => ride.origin), ...ridesArray.map(ride => ride.destination), destination];
-  
+
   // Create edges (connections between origin, destinations, and waypoints)
   const edges = [];
   ridesArray.forEach(ride => {
-      edges.push({ start: ride.origin, end: ride.destination });
+    edges.push({ start: ride.origin, end: ride.destination });
   });
 
   // Draw the nodes (origins, destinations, and waypoints)
   nodes.forEach(node => {
-      const x = Math.floor(node.long) * FACTOR;
-      const y = Math.floor(node.lat) * FACTOR;
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = "blue";
-      ctx.fill();
+    const x = Math.floor(node.long) * FACTOR;
+    const y = Math.floor(node.lat) * FACTOR;
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = "blue";
+    ctx.fill();
   });
 
   // Draw edges (lines between connected nodes)
   edges.forEach(edge => {
-      const x1 = Math.floor(edge.start.long) * FACTOR;
-      const y1 = Math.floor(edge.start.lat) * FACTOR;
-      const x2 = Math.floor(edge.end.long) * FACTOR;
-      const y2 = Math.floor(edge.end.lat) * FACTOR;
-      
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.strokeStyle = "black";
-      ctx.stroke();
+    const x1 = Math.floor(edge.start.long) * FACTOR;
+    const y1 = Math.floor(edge.start.lat) * FACTOR;
+    const x2 = Math.floor(edge.end.long) * FACTOR;
+    const y2 = Math.floor(edge.end.lat) * FACTOR;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = "black";
+    ctx.stroke();
   });
 
   // Draw the path from origin to destination (a simple line to connect start and end)
@@ -77,11 +77,11 @@ function drawGraph(ridesArray, origin, destination, ctx, FACTOR) {
 
   // Optionally, label the nodes (origins, destinations, waypoints)
   nodes.forEach(node => {
-      const x = Math.floor(node.long) * FACTOR;
-      const y = Math.floor(node.lat) * FACTOR;
-      ctx.font = "12px Arial";
-      ctx.fillStyle = "black";
-      ctx.fillText(`(${node.lat.toFixed(2)}, ${node.long.toFixed(2)})`, x + 5, y + 5);
+    const x = Math.floor(node.long) * FACTOR;
+    const y = Math.floor(node.lat) * FACTOR;
+    ctx.font = "12px Arial";
+    ctx.fillStyle = "black";
+    ctx.fillText(`(${node.lat.toFixed(2)}, ${node.long.toFixed(2)})`, x + 5, y + 5);
   });
 }
 
@@ -138,10 +138,10 @@ function calculateAngleBetweenRides(ride1, ride2) {
 
 function rankRidesByProximityToPod(ridesArray, pod) {
   function getMidpoint(ride) {
-      return {
-          x: (ride.origin.long + ride.destination.long) / 2,
-          y: (ride.origin.lat + ride.destination.lat) / 2
-      };
+    return {
+      x: (ride.origin.long + ride.destination.long) / 2,
+      y: (ride.origin.lat + ride.destination.lat) / 2
+    };
   }
 
   const podMidpoint = getMidpoint(pod);
@@ -149,14 +149,14 @@ function rankRidesByProximityToPod(ridesArray, pod) {
   console.log(podMidpoint)
 
   return ridesArray
-      .map(ride => {
-          const rideMidpoint = getMidpoint(ride);
-          const distance = Math.sqrt(
-              (rideMidpoint.x - podMidpoint.x) ** 2 + (rideMidpoint.y - podMidpoint.y) ** 2
-          );
-          return { ...ride, distance, bearing: calculateAngleBetweenRides(ride, pod) };
-      })
-      .sort((a, b) => a.distance - b.distance); 
+    .map(ride => {
+      const rideMidpoint = getMidpoint(ride);
+      const distance = Math.sqrt(
+        (rideMidpoint.x - podMidpoint.x) ** 2 + (rideMidpoint.y - podMidpoint.y) ** 2
+      );
+      return { ...ride, distance, bearing: calculateAngleBetweenRides(ride, pod) };
+    })
+    .sort((a, b) => a.distance - b.distance);
 }
 
 /**
@@ -174,96 +174,124 @@ function rankRidesByProximityToPod(ridesArray, pod) {
 */
 
 
-function renderPath(rideObjectType, ctx, FACTOR, originColor, destinationColor ){
+function renderPath(rideObjectType, ctx, FACTOR, originColor, destinationColor) {
+  const canvas = document.getElementById("canvas");
+  const seedOrigin = { lat: 32.520845925634895, Lng: -92.71762474132422 };
+  const SCALE = 2500;
 
-    // console.log(rideObjectType.origin.long)
-    const originX = Math.floor(rideObjectType.origin.long) * FACTOR;
-    const originY = Math.floor(rideObjectType.origin.lat) * FACTOR;
-    const destX = Math.floor(rideObjectType.destination.long) * FACTOR;
-    const destY = Math.floor(rideObjectType.destination.lat) * FACTOR;
-    // console.log(originX, originY, destX, destY);
+  const oLng = rideObjectType.origin.long !== undefined ? rideObjectType.origin.long : rideObjectType.origin.Lng;
+  const oLat = rideObjectType.origin.lat;
+  const dLng = rideObjectType.destination.long !== undefined ? rideObjectType.destination.long : rideObjectType.destination.Lng;
+  const dLat = rideObjectType.destination.lat;
 
-    ctx.beginPath();
-    ctx.arc(originX, originY, 5, 0, Math.PI * 2);
-    ctx.fillStyle = originColor ?? "black";
-    ctx.fill();
+  const originX = (oLng - seedOrigin.Lng) * SCALE + canvas.width / 2;
+  const originY = (seedOrigin.lat - oLat) * SCALE + canvas.height / 2;
+  const destX = (dLng - seedOrigin.Lng) * SCALE + canvas.width / 2;
+  const destY = (seedOrigin.lat - dLat) * SCALE + canvas.height / 2;
 
-    ctx.beginPath();
-    ctx.arc(destX, destY, 5, 0, Math.PI * 2);
-    ctx.fillStyle = destinationColor ??  "red";
-    ctx.fill();
+  ctx.beginPath();
+  ctx.arc(originX, originY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = originColor ?? "black";
+  ctx.fill();
 
-    ctx.beginPath();
-    ctx.moveTo(originX, originY);
-    ctx.lineTo(destX, destY);
-    ctx.strokeStyle = "black";
-    ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(destX, destY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = destinationColor ?? "red";
+  ctx.fill();
 
-    ctx.font = "14px Arial";
-    ctx.fillStyle = "blue";
-    const midX = (originX + destX) / 2;
-    const midY = (originY + destY) / 2;
-    const identifier = rideObjectType.rideId ? rideObjectType.rideId.slice(0,5) : "pod" ;
-    ctx.fillText( identifier, midX, midY - 5);
+  ctx.beginPath();
+  ctx.moveTo(originX, originY);
+  ctx.lineTo(destX, destY);
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.stroke();
 
+  ctx.font = "14px Arial";
+  ctx.fillStyle = "blue";
+  const midX = (originX + destX) / 2;
+  const midY = (originY + destY) / 2;
+  const identifier = rideObjectType.rideId ? rideObjectType.rideId.slice(0, 5) : "pod";
+  ctx.fillText(identifier, midX, midY - 5);
+}
+
+function generateRandomLocation(baseLat, baseLng, offset = 0.05) {
+  return {
+    lat: baseLat + (Math.random() - 0.5) * offset,
+    Lng: baseLng + (Math.random() - 0.5) * offset // Matches the 'Lng' json tag expected by backend
+  };
+}
+
+async function sendFakeRideRequest() {
+  const seedOrigin = { lat: 32.520845925634895, Lng: -92.71762474132422 };
+
+  const origin = generateRandomLocation(seedOrigin.lat, seedOrigin.Lng, 0.2);
+  const destination = generateRandomLocation(seedOrigin.lat, seedOrigin.Lng, 0.2);
+  const capacity = Math.floor(Math.random() * 4) + 1; // 1 to 4 capacity
+
+  try {
+    const response = await fetch("http://localhost:5000/api/request-ride", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        origin: origin,
+        destination: destination,
+        capacity: capacity
+      })
+    });
+
+    const data = await response.json();
+    console.log("Ride requested: ", data);
+
+    const canvas = document.getElementById("canvas");
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      renderPath({ origin, destination, rideId: data.rideId || "new" }, ctx, 1);
+    }
+
+    const list = document.getElementById("pods-list");
+    if (list && data.pod) {
+      const item = document.createElement("div");
+      item.style.padding = "10px";
+      item.style.border = "1px solid #ddd";
+      item.style.borderRadius = "8px";
+      item.style.backgroundColor = "#f9f9f9";
+      item.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
+
+      const podIdShort = data.pod.podId.slice(0, 8);
+      const rideIdShort = data.rideId.slice(0, 5);
+
+      item.innerHTML = `
+            <div style="font-weight: bold; color: #444;">Pod ID: <span style="color: blue;">${podIdShort}</span></div>
+            <div style="font-size: 13px; color: #666; margin-top: 4px;">Assigned Ride: <strong>#${rideIdShort}</strong></div>
+            <div style="font-size: 12px; color: #888; margin-top: 2px;">Capacity Used: ${Object.keys(data.pod.podRides || {}).length} / ${data.pod.podCapacity}</div>
+          `;
+      list.prepend(item);
+    }
+  } catch (err) {
+    console.error("Failed to request ride: ", err);
+  }
 }
 
 export default async function grapher() {
   const canvas = document.getElementById("canvas");
-
   const ctx = canvas.getContext("2d");
 
-  if (!canvas) {
-    console.error("Canvas not found.");
-    return;
-  }
-
-  if (!ctx) {
-    console.error("Failed to get canvas context.");
+  if (!canvas || !ctx) {
+    console.error("Canvas or context not found.");
     return;
   }
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const data = await fetch("http://localhost:5000", {
-    // mode:"no-cors"
-  });
-  
-   const ridesAndPod = await data.json();
-
-   console.log(ridesAndPod)
-    
-  const ridesArray = ridesAndPod.randomRides;
-  const pod = ridesAndPod.pod;
-  
-  const ranked  = rankRidesByProximityToPod(ridesArray, pod);
-
-  console.log(ridesArray);
-  
-  console.log(ranked);
-  
-  const W = ctx.canvas.width,
-    H = ctx.canvas.height;
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-  ctx.clearRect(0, 0, W, H);
-
-  ctx.setTransform(1, 0, 0, 1, W / 2, H / 2);
-
-  canvas.style.backgroundColor = "white";
-
-  const FACTOR = 3;
-
-  for (let item of ridesArray) {
-      // renderPath(item, ctx, FACTOR, "green", "orange")
+  const btn = document.getElementById("generate-btn");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      sendFakeRideRequest();
+      alert("Sent random ride request!");
+    });
   }
-
-  // renderPath(pod, ctx, FACTOR)
-
-
-  drawGraph(ridesArray, pod.origin, pod.destination, ctx,  FACTOR);
 }
 
 grapher();
