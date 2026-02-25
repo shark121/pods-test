@@ -54,9 +54,9 @@ func CreatePod(ride RideObject) Pod {
 	podDistance := ride.RideDistance
 
 	capacity := ride.RideCapacity
-	if capacity < 1 {
+	if capacity <= 1 {
 		capacity = 1
-	} else if capacity > 4 {
+	} else if capacity >= 4 {
 		capacity = 4
 	}
 

@@ -4,24 +4,27 @@ import (
 	"context"
 	"time"
 
+	"fmt"
+
 	"cloud.google.com/go/firestore"
 	"github.com/mmcloughlin/geohash"
 	"github.com/pod-server-test/calc"
 	t "github.com/pod-server-test/types"
 )
 
-func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.RideObject) error {
+func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.RideObject) (t.Pod, error) {
 	const precision = 5
 	const maxWaitTime = 30 * time.Minute
 	const defaultMaxAngle = 60.0
 	const defaultMaxKm = 50.0
 
-	// We calculate distance and direction dynamically
 	req.Direction = calc.CalculateBearing(req.Origin, req.Destination)
 	req.RideDistance = calc.DistanceBetweenTwoPoints(req.Origin, req.Destination)
 
 	geo := geohash.EncodeWithPrecision(req.Origin.Lat, req.Origin.Lng, precision)
-	podsRef := client.Collection("pods")
+
+	tierDoc := fmt.Sprintf("tier_%d", req.RideCapacity)
+	podsRef := client.Collection("pods").Doc(tierDoc).Collection("activePods")
 
 	nearby := append([]string{geo}, geohash.Neighbors(geo)...)
 	var matchedPod *firestore.DocumentSnapshot
@@ -36,28 +39,43 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 			}
 			var pod t.Pod
 			if err := doc.DataTo(&pod); err != nil {
+				fmt.Println("Error converting pod data: ", err)
 				continue
 			}
 
-			// Capacity check
-			currentOccupancy := 0
-			for _, r := range pod.PodRides {
-				currentOccupancy += int(r.RideCapacity)
-			}
-			if currentOccupancy+int(req.RideCapacity) > int(pod.PodCapacity) {
+			if len(pod.PodRides) >= int(pod.PodCapacity) {
+				fmt.Println("Pod is full")
 				continue
 			}
 
-			// Expiration check
 			if time.Since(pod.CreatedAt) > maxWaitTime {
+				fmt.Println("Pod is too old")
 				continue
 			}
 
-			// Destination and trajectory constraint check
-			if !isCloseEnough(pod, req, defaultMaxKm, defaultMaxAngle) {
+			if pod.PodStatus == "dispatched" || pod.PodStatus == "completed" {
+				fmt.Println("Pod is dispatched or completed")
 				continue
 			}
 
+			podMid := calc.GetMidpoint(pod.PodOrigin, pod.PodDestination)
+			reqMid := calc.GetMidpoint(req.Origin, req.Destination)
+			podMidLoc := t.Location{Lat: podMid["y"], Lng: podMid["x"]}
+			reqMidLoc := t.Location{Lat: reqMid["y"], Lng: reqMid["x"]}
+
+			distanceBetweenMidPoints := calc.DistanceBetweenTwoPoints(podMidLoc, reqMidLoc)
+			angleDifference := calc.CalculateAngleBetweenRides(pod.PodOrigin, pod.PodDestination, req.Origin, req.Destination)
+
+			detourPenalty := (distanceBetweenMidPoints / defaultMaxKm) * 100.0
+			anglePenalty := (angleDifference / defaultMaxAngle) * 100.0
+
+			fmt.Println(detourPenalty, anglePenalty)
+			if detourPenalty > 100 || anglePenalty > 100 {
+				fmt.Println("Detour penalty or angle penalty is too high")
+				continue
+			}
+
+			// First pod that passes constraints is deemed successful (Greedy Match)
 			matchedPod = doc
 			podToMatch = pod
 			break
@@ -71,26 +89,11 @@ func HandleRideRequest(ctx context.Context, client *firestore.Client, req t.Ride
 	if matchedPod != nil {
 		podToMatch.PodRides[req.RideID] = req
 		_, err := matchedPod.Ref.Set(ctx, podToMatch)
-		return err
+		return podToMatch, err
 	}
 
 	newPod := t.CreatePod(req)
 	newPod.Geohash = geo
 	_, err := podsRef.Doc(newPod.PodID).Set(ctx, newPod)
-	return err
-}
-
-func isCloseEnough(pod t.Pod, req t.RideObject, maxKm float64, maxAngle float64) bool {
-	angleDifference := calc.CalculateAngleBetweenRides(pod.PodOrigin, pod.PodDestination, req.Origin, req.Destination)
-
-	// Since they both have Lat/Lng coordinates, calculate distance between their midpoints
-	podMid := calc.GetMidpoint(pod.PodOrigin, pod.PodDestination)
-	reqMid := calc.GetMidpoint(req.Origin, req.Destination)
-
-	podMidLoc := t.Location{Lat: podMid["y"], Lng: podMid["x"]}
-	reqMidLoc := t.Location{Lat: reqMid["y"], Lng: reqMid["x"]}
-
-	distanceBetweenMidPoints := calc.DistanceBetweenTwoPoints(podMidLoc, reqMidLoc)
-
-	return (angleDifference <= maxAngle) && (distanceBetweenMidPoints <= maxKm)
+	return newPod, err
 }

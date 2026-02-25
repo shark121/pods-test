@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -30,10 +31,6 @@ func SetupRoutes(mux *http.ServeMux, dbApp firebaseutils.Instance) {
 			return
 		}
 
-		// Calculate direction
-		// Basic cartesian bearing approximation for placeholder if needed, normally frontend handles this, or backend via Maps
-		// For now we will populate 0 until it's calculated in handleRequest
-
 		ride := t.RideObject{
 			RideID:       uuid.New().String(),
 			RideTime:     time.Now().Format(time.RFC3339),
@@ -45,7 +42,7 @@ func SetupRoutes(mux *http.ServeMux, dbApp firebaseutils.Instance) {
 			CreatedAt:    time.Now(),
 		}
 
-		err := HandleRideRequest(dbApp.Ctx, dbApp.DB, ride)
+		pod, err := HandleRideRequest(dbApp.Ctx, dbApp.DB, ride)
 		if err != nil {
 			http.Error(res, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
 			return
@@ -54,6 +51,7 @@ func SetupRoutes(mux *http.ServeMux, dbApp firebaseutils.Instance) {
 		json.NewEncoder(res).Encode(map[string]interface{}{
 			"message": "Ride request processed",
 			"rideId":  ride.RideID,
+			"pod":     pod,
 		})
 	})
 
@@ -65,7 +63,8 @@ func SetupRoutes(mux *http.ServeMux, dbApp firebaseutils.Instance) {
 		}
 
 		var podReq struct {
-			PodID string `json:"podId"`
+			PodID    string `json:"podId"`
+			Capacity int8   `json:"capacity"`
 		}
 
 		if err := json.NewDecoder(req.Body).Decode(&podReq); err != nil {
@@ -73,7 +72,8 @@ func SetupRoutes(mux *http.ServeMux, dbApp firebaseutils.Instance) {
 			return
 		}
 
-		_, err := dbApp.DB.Collection("pods").Doc(podReq.PodID).Update(dbApp.Ctx, []firestore.Update{
+		tierDoc := fmt.Sprintf("tier_%d", podReq.Capacity)
+		_, err := dbApp.DB.Collection("pods").Doc(tierDoc).Collection("activePods").Doc(podReq.PodID).Update(dbApp.Ctx, []firestore.Update{
 			{Path: "createdAt", Value: time.Now()},
 		})
 
@@ -95,7 +95,8 @@ func SetupRoutes(mux *http.ServeMux, dbApp firebaseutils.Instance) {
 		}
 
 		var podReq struct {
-			PodID string `json:"podId"`
+			PodID    string `json:"podId"`
+			Capacity int8   `json:"capacity"`
 		}
 
 		if err := json.NewDecoder(req.Body).Decode(&podReq); err != nil {
@@ -103,7 +104,8 @@ func SetupRoutes(mux *http.ServeMux, dbApp firebaseutils.Instance) {
 			return
 		}
 
-		_, err := dbApp.DB.Collection("pods").Doc(podReq.PodID).Update(dbApp.Ctx, []firestore.Update{
+		tierDoc := fmt.Sprintf("tier_%d", podReq.Capacity)
+		_, err := dbApp.DB.Collection("pods").Doc(tierDoc).Collection("activePods").Doc(podReq.PodID).Update(dbApp.Ctx, []firestore.Update{
 			{Path: "podStatus", Value: "dispatched"},
 		})
 
