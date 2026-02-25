@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pod-server-test/utils"
+
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	option "google.golang.org/api/option"
@@ -19,48 +21,41 @@ type App struct {
 }
 
 type Instance struct {
-	db  *firestore.Client
-	ctx context.Context
+	DB  *firestore.Client
+	Ctx context.Context
 }
 
 func (app *Instance) Add(data map[string]any) {
-	// collection := app.db.Doc("students/names")
+	// collection := app.DB.Doc("students/names")
 
-	// collection.Set(app.ctx, data)
+	// collection.Set(app.Ctx, data)
 
 	// print("data added successfully")
 }
 
 func CreateAppInstance() (Instance, error) {
 	var ctx context.Context = context.Background()
+	cfg := utils.LoadConfig()
 
-	options := option.WithCredentialsFile("../../pods-rideshare-firebase-adminsdk-fbsvc-5b4e19c35f.json")
+	var options option.ClientOption
+	if cfg.FirebaseKeyPath != "" {
+		options = option.WithCredentialsFile(cfg.FirebaseKeyPath)
+	} else {
+		// Used deployed service account logic if path is empty
+		options = option.WithCredentialsFile("")
+	}
 
 	app, err := firebase.NewApp(ctx, nil, options)
 
 	if err != nil {
-		fmt.Println("error creating app instance", err)
+		return Instance{}, fmt.Errorf("error creating app instance: %w", err)
 	}
 
 	db, err := app.Firestore(ctx)
 
 	if err != nil {
-		print(err)
+		return Instance{}, fmt.Errorf("error creating firestore client: %w", err)
 	}
 
-	return Instance{db, ctx}, err
-}
-
-func main() {
-
-	myDBApp, err := CreateAppInstance()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	stud := map[string]any{"h": "3"}
-
-	myDBApp.Add(stud)
-
+	return Instance{DB: db, Ctx: ctx}, nil
 }

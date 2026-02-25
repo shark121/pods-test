@@ -35,6 +35,7 @@ type Pod struct {
 	PodDirection   float64               `json:"podDirection"`
 	PodDistance    float64               `json:"podDistance"`
 	CreatedAt      time.Time             `json:"createdAt"`
+	Geohash        string                `json:"geohash" firestore:"geohash"`
 }
 
 func (p *Pod) AddRide(ride RideObject) {
@@ -52,10 +53,17 @@ func CreatePod(ride RideObject) Pod {
 	podDirection := ride.Direction
 	podDistance := ride.RideDistance
 
+	capacity := ride.RideCapacity
+	if capacity < 1 {
+		capacity = 1
+	} else if capacity > 4 {
+		capacity = 4
+	}
+
 	return Pod{
 		PodOrigin:      ride.Origin,
 		PodDestination: ride.Destination,
-		PodCapacity:    ride.RideCapacity,
+		PodCapacity:    capacity,
 		PodStatus:      podStatus,
 		PodID:          podID,
 		PodRides:       podRides,
@@ -63,5 +71,6 @@ func CreatePod(ride RideObject) Pod {
 		PodDirection:   podDirection,
 		PodDistance:    podDistance,
 		CreatedAt:      time.Now(),
+		Geohash:        "", // will be populated prior to saving
 	}
 }

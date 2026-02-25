@@ -34,12 +34,13 @@ func FormatToString(loc types.Location) string {
 }
 
 func GetMapDirections(pod types.Pod) {
-	cfg := util.ReadConfig("C:/Users/HP/Desktop/nuclear-launch-codes/pods-test/config.json")
+	cfg := util.LoadConfig()
 
-	client, err := m.NewClient(m.WithAPIKey(cfg.Maps_key))
+	client, err := m.NewClient(m.WithAPIKey(cfg.MapsKey))
 
 	if err != nil {
 		fmt.Println("error loading maps", err)
+		return
 	}
 
 	waypoints := []string{}
