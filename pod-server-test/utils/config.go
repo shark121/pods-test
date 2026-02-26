@@ -1,33 +1,26 @@
 package utils
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
-type KEYS struct {
-	Maps_key string `json:"GOOGLE_MAPS_API_KEY"`
+type Config struct {
+	MapsKey         string
+	FirebaseKeyPath string
 }
 
-func ReadConfig(path string) KEYS {
-	file, err := os.Open(path)
-
+func LoadConfig() Config {
+	// Load .env file if it exists, otherwise rely on system environment variables
+	err := godotenv.Load()
 	if err != nil {
-		print(err)
+		log.Println("No .env file found, relying on system environment variables")
 	}
 
-	bytes, err := io.ReadAll(file)
-
-	var res KEYS
-
-	err = json.Unmarshal(bytes, &res)
-
-	if err != nil {
-		fmt.Println("json unmarshalling error ", err)
+	return Config{
+		MapsKey:         os.Getenv("GOOGLE_MAPS_API_KEY"),
+		FirebaseKeyPath: os.Getenv("FIREBASE_CREDENTIALS"),
 	}
-
-	return res
-
 }

@@ -1,1 +1,8 @@
+<<<<<<< HEAD
 pods-rideshare-firebase-adminsdk-fbsvc-7098514035.json
+=======
+node_modules
+/ios
+/android
+pod-server-test/pods-rideshare-firebase-adminsdk-fbsvc-7098514035.json
+>>>>>>> d39e2fc54b334054a6b30ba699952213009a9465

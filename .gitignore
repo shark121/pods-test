@@ -1,1 +1,3 @@
 config.json
+./*/node_modules
+pod-server-test/pods-rideshare-firebase-adminsdk-fbsvc-7098514035.json

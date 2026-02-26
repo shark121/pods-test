@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/firestore v1.14.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/google/uuid v1.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/mmcloughlin/geohash v0.10.0
 	google.golang.org/api v0.229.0
 	googlemaps.github.io/maps v1.7.0
