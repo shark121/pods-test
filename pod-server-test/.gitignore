@@ -42,4 +42,4 @@ app-example
 # generated native folders
 /ios
 /android
-/pods-rideshare-firebase*
+/pods-rideshare-firebase-adminsdk-fbsvc-7098514035.json
